@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.whm.atelier.mapper.customer.CustomerOrderMapper">
+	<select id="selectMyProduct" resultType="com.whm.atelier.vo.Product">
+		SELECT * FROM Product 
+		WHERE store_no = #{storeNo}
+		ORDER BY product_NO DESC
+	</select>
+	
+	<select id="selectMyOrder" resultType="com.whm.atelier.vo.Order">
+		SELECT * 
+		FROM ORDER_TB 
+		WHERE PRODUCT_NO = #{productNo}
+		
+	</select>
+	
+	<select id="selectDetailOrder" resultType="com.whm.atelier.vo.Order">
+		SELECT * 
+		FROM ORDER_TB 
+		WHERE order_no = #{orderNo}
+		
+	</select>
+		<select id="selectDetailProduct" resultType="com.whm.atelier.vo.Product">
+		SELECT * 
+		FROM Product 
+		WHERE PRODUCT_NO = #{productNo}
+		
+	</select>
+	
+	
+	<select id="restSelectMyOrder" resultType="com.whm.atelier.vo.Order">
+		SELECT *
+		FROM ORDER_TB
+		WHERE PRODUCT_NO = #{productNo}
+		AND order_delivery_status LIKE '%' || #{orderStatus}  || '%' 
+		
+	</select>
+	
+	
+	<!-- 상품의 주소 불러오기용 -->
+	<select id="restSelectAddress" resultType="com.whm.atelier.vo.ConsumerAddress">
+		SELECT *
+		FROM Consumer_address
+		WHERE consumer_no = #{consumerNo}
+		
+	</select>
+</mapper>

@@ -1,0 +1,56 @@
+
+--------------------------------------- 참고사항 ---------------------------------------
+
+ # jsp 생성 시 전체 공통 형식 (모바일 웹 퍼블리싱 작업 시 태그)
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+# 부트스트랩
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+
+---------------------------------------------------------------------------------------
+
+ # jstl 태그 라이브러리
+ 
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+
+ # jquery
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+---------------------------------------------------------------------------------------
+ # 숫자 3자리마다 콤마 찍히는 함수 jquery
+ 	$(window).on('load', function(){
+	    $('.money').each(function(){
+	        var txt = $(this).text();
+	        $(this).html(txt.replace(/,/g, ''));
+	
+	        var len = $(this).text().length;
+	        for (i = 0; i < len; i ++){
+	            $(this).eq(i).text(commaNum($(this).eq(i).text()));
+	        }
+	    });
+	
+	    function commaNum(num){
+	        var len, point, str;
+	        num = num + '';
+	        point = num.length % 3
+	        len = num.length;
+	        str = num.substring(0, point);
+	        while (point < len){
+	            if (str != '') str += ',';
+	            str += num.substring(point, point + 3);
+	            point += 3;
+	        }
+	        return str;
+	    }
+	});
+
+
+---------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------
+
+
+
+

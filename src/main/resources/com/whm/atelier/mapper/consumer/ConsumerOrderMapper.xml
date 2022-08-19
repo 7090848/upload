@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.whm.atelier.mapper.consumer.ConsumerOrderMapper">
+	
+	<!-- Payment PK 생성-->
+	<select id="createPaymentPk" resultType="int">
+		SELECT Payment_seq.nextval FROM dual
+	</select>
+	
+	<!-- 장바구니 넣기 -->
+	<insert id="addCart">
+		INSERT INTO CART VALUES (
+			cart_seq.nextval,
+			#{consumer_no},
+			#{product_no},
+			#{cart_product_count}
+		)		
+	</insert>
+	
+	<select id="selectCart" resultType="com.whm.atelier.vo.Cart">
+		SELECT * FROM CART WHERE consumer_no = #{consumer_no} AND product_no = #{product_no}
+	</select>
+	
+	<!-- 장바구니 수량 변경 -->
+	<update id="modifyProductCnt">
+		UPDATE CART SET CART_PRODUCT_COUNT = #{cart_product_count} WHERE cart_no = #{cart_no}		
+	</update>
+	
+	<!-- 장바구니 제품 삭제 -->
+	<delete id="removeCart">
+		DELETE FROM CART WHERE CART_NO = #{cart_no}
+	</delete>
+	
+	<delete id="removeCartAll">
+		DELETE FROM CART WHERE consumer_no = #{consumer_no}
+	</delete>
+
+	<!-- 장바구니 전체 불러오기 -->
+	<select id="selectAllCart" resultType="com.whm.atelier.vo.Cart">
+		SELECT
+			c.CART_NO ,
+			c.CONSUMER_NO ,
+			c.PRODUCT_NO ,
+			c.CART_PRODUCT_COUNT ,
+			s.STORE_NO ,
+			s.STORE_NAME ,
+			p.PRODUCT_NAME ,
+			p.PRODUCT_PRICE ,
+			p.PRODUCT_POST_PRICE,
+			pi.pi_path
+		FROM CART c , PRODUCT p , STORE s, PRODUCT_IMAGE pi
+		WHERE c.product_no = p.product_no
+		AND p.product_no = pi.product_no
+		AND pi.pi_representive_yn = 'y'
+		AND p.store_no = s.store_no
+		AND p.product_status_yn = 'y'
+		AND c.consumer_no = #{consumer_no}
+		ORDER BY c.CART_NO ASC
+	</select>
+	
+	<!-- 주문하기 -->
+	<insert id="insertOrder">
+		INSERT INTO order_tb VALUES (
+			order_tb_seq.nextval,
+			#{product_no},
+			#{payment_no},
+			#{consumer_no},
+			'PAY',
+			'READY',
+			#{order_product_count},
+			SYSDATE,
+			#{order_number}
+		)
+	</insert>
+	
+	<!-- 주문내역 불러오기 -->
+	<select id="selectOrderList" resultType="map">
+		SELECT
+			c.CONSUMER_NO, c.CONSUMER_ID, c.CONSUMER_NICKNAME,
+			ca.address_no, ca.address_postcd, ca.address_street_addr, ca.address_detail_addr, ca.address_name, ca.address_phone, ca.address_message,
+			cpl.point_log_no, cpl.point_price, cpl.point_date,
+			pd.product_no, pd.store_no, pd.product_name, pd.product_price, pd.product_description, pd.product_post_price,
+			ot.order_no, ot.order_complete_status, ot.order_delivery_status, ot.order_product_count, ot.order_date, ot.order_number,
+			pm.payment_no, pm.payment_origin_price, pm.payment_use_point, pm.payment_use_coupon, pm.payment_total_price, pm.payment_savepoint
+		FROM CONSUMER c , CONSUMER_ADDRESS ca, ORDER_TB ot, PAYMENT pm, PRODUCT pd, CONSUMER_POINT_LOG cpl
+		WHERE c.CONSUMER_NO = ca.consumer_no
+		AND c.CONSUMER_NO = ot.consumer_no
+		AND ot.payment_no = pm.payment_no
+		AND ot.product_no = pd.product_no 
+		AND c.CONSUMER_NO = cpl.consumer_no
+		<if test="order_complete_status != null">
+			AND ot.order_complete_status = #{order_complete_status}
+		</if>
+		<if test="order_delivery_status != null">
+			AND ot.order_delivery_status = #{order_delivery_status}
+		</if>
+		<if test="order_start_date != null and order_end_date != null">
+			AND ot.order_date BETWEEN #{order_start_date} AND #{order_end_date}
+		</if>
+		<if test="consumer_no != null">
+			AND ot.CONSUMER_NO = #{consumer_no}
+		</if>
+		<if test="store_no != null">
+			AND pd.store_no = #{store_no}
+		</if>	
+		ORDER BY ot.order_date ASC
+	</select>
+	
+	<!-- 결제 -->
+	<insert id="insertPayment">
+		INSERT INTO PAYMENT values(
+			payment_seq.nextval,
+			#{payment_origin_price},
+			#{payment_use_point},
+			#{payment_use_coupon},
+			#{payment_total_price},
+			#{payment_savepoint}
+		)
+	</insert>
+	
+	<!--  고객이 주문한 리스트  -->
+	<select id="addressPayPriceData" resultType="map">
+		SELECT c.CONSUMER_NO , pm.payment_no, ot.ORDER_NO , r.review_no, s.store_no, p.product_no,
+		pm.PAYMENT_TOTAL_PRICE , pm.PAYMENT_ORIGIN_PRICE, pm.PAYMENT_USE_COUPON , pm.PAYMENT_USE_POINT , pm.PAYMENT_SAVEPOINT,
+		p.PRODUCT_POST_PRICE , p.PRODUCT_NAME , p.PRODUCT_PRICE, P.PRODUCT_DESCRIPTION , 
+		ca.ADDRESS_NAME ,ca.ADDRESS_PHONE , ca.ADDRESS_POSTCD , ca.ADDRESS_STREET_ADDR , ca.ADDRESS_DETAIL_ADDR , 
+		s.STORE_NAME , pi2.PI_ORIGINAL_FILENAME , pi2.PI_PATH , 
+		ot.ORDER_NUMBER , ot.ORDER_DATE, ot.ORDER_PRODUCT_COUNT , ot.ORDER_DELIVERY_STATUS ,ot.ORDER_COMPLETE_STATUS
+		FROM PAYMENT pm , PRODUCT p , CONSUMER_ADDRESS ca , consumer c, ORDER_TB ot , STORE s , REVIEW r , PRODUCT_IMAGE pi2 
+		WHERE ot.PAYMENT_NO = pm.PAYMENT_NO 
+		AND ot.PRODUCT_NO = p.PRODUCT_NO 
+		AND c.CONSUMER_NO =ca.CONSUMER_NO 
+		AND ot.CONSUMER_NO = c.CONSUMER_NO 
+		AND ot.PRODUCT_NO =p.PRODUCT_NO 
+		AND p.STORE_NO = s.STORE_NO
+		AND ot.ORDER_NO = r.ORDER_NO
+		AND pi2.PRODUCT_NO = ot.PRODUCT_NO 
+		AND pi2.PI_REPRESENTIVE_YN = 'y'
+		<if test="consumer_no != null"> AND c.CONSUMER_NO = #{consumer_no } </if>
+		<if test="payment_no != null"> AND pm.PAYMENT_NO = #{payment_no } </if>
+		ORDER BY ot.ORDER_NO desc
+	</select>
+	
+	<!-- 고객이 주문한 상세정보 -->
+	<select id="addressPayPriceDataDetail" resultType="map">
+		SELECT 
+	 	   c.CONSUMER_NO , pm.payment_no, ot.ORDER_NO , r.review_no, s.store_no, p.product_no,
+	 	   pm.PAYMENT_TOTAL_PRICE , pm.PAYMENT_ORIGIN_PRICE , pm.PAYMENT_USE_COUPON , pm.PAYMENT_USE_POINT , pm.PAYMENT_SAVEPOINT,
+		   p.PRODUCT_POST_PRICE , p.PRODUCT_NAME , P.PRODUCT_DESCRIPTION ,
+		   ca.ADDRESS_NAME , ca.ADDRESS_PHONE , ca.ADDRESS_POSTCD , ca.ADDRESS_STREET_ADDR , ca.ADDRESS_DETAIL_ADDR , ca.ADDRESS_MESSAGE , 
+		   s.STORE_NAME , pi2.PI_ORIGINAL_FILENAME , pi2.PI_PATH , 
+		   r.review_content, review_star, review_img_path, review_writedate,
+		   ot.ORDER_NUMBER , ot.ORDER_DATE , ot.ORDER_PRODUCT_COUNT , ot.ORDER_DELIVERY_STATUS 
+			FROM PAYMENT pm , PRODUCT p , CONSUMER_ADDRESS ca , consumer c, ORDER_TB ot , STORE s , REVIEW r ,PRODUCT_IMAGE pi2 
+			WHERE ot.PAYMENT_NO = pm.PAYMENT_NO 
+			AND ot.PRODUCT_NO = p.PRODUCT_NO 
+			and c.CONSUMER_NO = ca.CONSUMER_NO 
+			and ot.CONSUMER_NO = c.CONSUMER_NO 
+			and ot.PRODUCT_NO = p.PRODUCT_NO 
+			AND p.STORE_NO = s.STORE_NO 
+			AND r.ORDER_NO  = ot.ORDER_NO 
+			AND pi2.PRODUCT_NO = ot.PRODUCT_NO 
+			AND pi2.PI_REPRESENTIVE_YN = 'y'
+		<if test="consumer_no != null"> 
+			AND c.CONSUMER_NO = #{consumer_no} 
+		</if>
+		<if test="payment_no != null">
+			AND pm.PAYMENT_NO = #{payment_no} 
+		</if>
+		<if test="order_no != null"> 
+			AND ot.ORDER_NO = #{order_no} 
+		</if>
+		<if test="store_no != null">
+			AND s.store_no = #{store_no}
+		</if> 
+		<if test="review_no != null">
+			AND r.review_no = #{review_no}
+		</if>
+		<if test="product_no != null">
+			AND p.product_no = #{product_no}
+		</if>
+	</select>
+	
+	<!-- 구매확정 -->
+	<update id="completeConfirmation"> 
+		UPDATE order_tb SET ORDER_COMPLETE_STATUS = 'PURCH'
+		WHERE order_no = #{order_no} AND payment_no = #{payment_no} AND
+		consumer_no =#{consumer_no} AND ORDER_DELIVERY_STATUS ='COM' 
+	</update>
+	
+	<!-- 중복확인 -->
+	<select id="completeOverlap" resultType="com.whm.atelier.vo.OrderTb"> 
+		SELECT count(*) FROM order_tb WHERE order_no = #{order_no}
+		AND payment_no = #{payment_no} AND consumer_no = #{consumer_no} AND
+		ORDER_DELIVERY_STATUS = 'COM' AND ORDER_COMPLETE_STATUS = 'PUNCH'
+	</select>
+	
+	<select id="setSavePoint" resultType="int"> 
+		SELECT PAYMENT_SAVEPOINT
+		FROM payment WHERE payment_no = #{payment_no} 
+	</select>
+	
+	<select id="selectByNoCon" resultType="com.whm.atelier.vo.Consumer"> 
+		SELECT * FROM consumer WHERE consumer_no = #{consumer_no}
+	</select>
+	
+	<update id="updatePoint"> 
+		UPDATE CONSUMER SET CONSUMER_TOTALPOINT = #{sum}
+		WHERE consumer_no = #{consumer_no} 
+	</update>
+	
+	<insert id="insertPointLog"> 
+		INSERT INTO CONSUMER_POINT_LOG values(
+		consumer_point_log_seq.nextval, #{consumer_no }, #{save }, SYSDATE )
+	</insert>
+	
+	<insert id="insertReview"> 
+		INSERT INTO REVIEW values( review_seq.nextval,
+		#{consumer_no }, #{product_no}, #{store_no}, #{review_content},
+		#{review_star}, #{review_writedate}, #{review_img_path} )
+	</insert>
+	
+	<select id="orderLab" resultType="int"> 
+		SELECT count(*) FROM ORDER_TB
+		WHERE ORDER_COMPLETE_STATUS = 'PURCH' AND order_no = #{order_no} AND
+		consumer_no= #{consumer_no} 
+	</select>
+	
+	<select id="orderset" resultType="com.whm.atelier.vo.OrderTb"> 
+		SELECT * FROM ORDER_TB WHERE
+		order_no= #{order_no} 
+	</select>
+	
+	<select id="conPointLog" resultType="com.whm.atelier.vo.ConsumerPointLog">
+		SELECT * FROM CONSUMER_POINT_LOG cpl where consumer_no = #{consumer_no} ORDER BY POINT_LOG_NO DESC
+	</select>
+	
+	<select id="completeDelivery" resultType="int">
+		SELECT count(*) FROM PAYMENT p, ORDER_TB ot WHERE p.PAYMENT_NO = ot.PAYMENT_NO AND ot.ORDER_DELIVERY_STATUS = 'COM' 
+		AND ot.ORDER_NO = #{order_no}
+		AND ot.CONSUMER_NO  = #{consumer_no}
+	</select>
+	
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.whm.atelier.mapper.coupon.CouponMapper">
+	<insert id="insertCoupon">
+	INSERT INTO coupon values(
+	coupon_seq.nextval,
+	#{coupon_name},
+	#{coupon_saleprice},
+	<!-- #{coupon_img_original_name},
+	#{coupon_link}, -->
+	#{coupon_img},
+	#{coupon_count},
+	#{coupon_lastdate},
+	SYSDATE
+	)
+	</insert>
+	
+	<!-- 전체 쿠폰 출력 -->
+	<select id="selectAllCou" resultType="com.whm.atelier.vo.Coupon">
+		select * from coupon order by coupon_no DESC
+	</select>	
+	
+	<delete id ="deleteCoupon">
+		DELETE FROM coupon WHERE coupon_no = #{coupon_no}
+	</delete>
+	
+	<select id ="selectByNoCoupon" resultType="com.whm.atelier.vo.Coupon">
+		select * from Coupon where coupon_no = #{coupon_no }
+	</select>
+	
+	<select id = "selectByNoCouMake" resultType="com.whm.atelier.vo.CouponMake">
+		SELECT * FROM COUPON_MAKE WHERE coupon_make_no= #{coupon_make_no }
+	</select>
+	
+	<select id="selectAllCouMake" resultType="map">
+		SELECT * FROM COUPON_MAKE cm , COUPON c WHERE cm.COUPON_NO = c.COUPON_NO 
+		AND COUPON_MAKE_STATUS = 'Y' AND cm.CONSUMER_NO = #{consumer_no}
+	</select>
+	
+	
+	<!-- 구현해야할 것 -->
+	
+	
+	
+	
+	<!-- 쿠폰 유저에게 줌 -->
+	<insert id="giveToCoupon">
+		INSERT INTO coupon_make values(
+		 	coupon_seq.nextval,
+			1,
+			#{consumer_no},
+		 	#{coupon_no},
+		 	'Y'
+ 		)
+	</insert>
+	
+	<!-- 중복확인 -->
+	<select id = "selectOverLap" resultType="int">
+		SELECT count(*) FROM coupon_make WHERE consumer_no = #{consumer_no } AND coupon_no = #{coupon_no }
+	</select>
+	
+	<!-- 만료,사용 쿠폰 출력 -->
+	<select id ="expiredCoupon" resultType="com.whm.atelier.vo.CouponMake">
+		SELECT * FROM coupon_make WHERE coupon_make_status = 'N'
+	</select>
+	
+	<!-- 유저가 사용,만료된 쿠폰 리스트 출력 -->
+	<select id ="expiredConsumerCoupon" resultType="com.whm.atelier.vo.CouponMake">
+		SELECT * FROM coupon_make WHERE coupon_make_status = 'N' AND consumer_no = #{consumer_no }
+	</select>
+	
+	<!-- 카운트 -->
+	<select id ="remainingCouponCount" resultType="int">
+		SELECT c.COUPON_COUNT - (
+			SELECT COUNT(*) FROM COUPON_MAKE cm WHERE cm.COUPON_NO = #{coupon_no}
+			) AS remaining_cnt
+		FROM COUPON c
+		WHERE c.COUPON_NO = #{coupon_no}
+	</select>
+	
+	<select id ="myCouponCount" resultType="int">
+		SELECT count(*) FROM COUPON_MAKE cm ,COUPON cp, CONSUMER c 
+		WHERE cm.CONSUMER_NO = c.CONSUMER_NO 
+		AND cm.COUPON_NO = cp.COUPON_NO 
+		AND c.consumer_no = #{consumer_no}
+	</select>
+	
+	
+	
+
+
+</mapper>

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.whm.atelier.mapper.customer.CustomerMainMapper">
+
+	<!-- 아이디 중복 체크 -->
+	<select id="selectCheckId" resultType="com.whm.atelier.vo.Customer">
+		SELECT *
+		FROM Customer
+		WHERE customer_id LIKE '%' || #{name} || '%'
+	
+	</select>
+	
+	<!-- 아이디로 계정 유무 체크 -->
+	<select id="selectByIdAndPw" resultType="com.whm.atelier.vo.Customer">
+		SELECT * FROM CUSTOMER WHERE customer_id = #{customer_id} and customer_pw = #{customer_pw}
+	</select>
+	
+   <select id="selectProductDetail" resultType="com.whm.atelier.vo.Product">
+      SELECT * FROM Product WHERE product_no=#{productNo}
+   </select>
+   
+   
+   <update id="updateStoreProfile">
+      UPDATE  Store
+      SET store_name = #{store_name}, store_profile =#{store_profile}
+      WHERE  customer_no =#{customer_no}
+   </update>
+   
+   
+   <update id="updateProductProfile">
+      UPDATE  Product
+      SET product_name = #{product_name}, product_price =#{product_price}, product_description=#{product_description},
+      product_post_price=#{product_post_price}
+      WHERE  product_no =#{product_no}
+   </update>
+   
+   <insert id="insertStoreNameAndProfile">
+	INSERT INTO Store VALUES(
+	Store_seq.nextval,
+	  #{customer_no},
+	  1,
+	  #{store_name},
+	  #{store_profile},
+	  'null',
+	  'null',
+	   0,
+	   SYSDATE
+		)
+	</insert>
+	
+	<select id="selectStoreNo" resultType="com.whm.atelier.vo.Store">
+		SELECT * 
+		FROM Store
+		WHERE customer_no =#{customerNo}
+	</select>
+	
+	<insert id="insertProductProfile">
+	INSERT INTO Product VALUES(
+	Product_seq.nextval,
+	#{store_no},
+	#{product_category_no},
+	1,
+	#{product_name},
+	#{product_price},
+	#{product_description},
+	#{product_post_price},
+	'y',
+	SYSDATE
+	)
+	</insert>
+	
+	<select id="searchMyProduct" resultType="com.whm.atelier.vo.Product">
+		SELECT * FROM Product WHERE store_no=#{storeNo} AND product_name Like '%' || #{productName} || '%' AND product_confirm_status_no =#{confirmNo}
+		AND product_status_yn Like '%' || #{productYn} || '%'  
+		ORDER BY product_NO DESC
+	</select>
+	
+	<update id="updateProductStatusYn">
+		UPDATE  Product
+		SET product_status_yn = #{productYn}
+		WHERE  product_no =#{productNo}
+	</update>
+	
+	<update id="updateProductStatusStop">
+		UPDATE  Product SET product_confirm_status_no = 3 WHERE  product_no =#{productNo}
+	</update>
+	
+	<update id="updateProductStatusStart">
+		UPDATE  Product SET product_confirm_status_no = 4 WHERE  product_no =#{productNo}
+	</update>
+	
+	<select id="selectTier" resultType="com.whm.atelier.vo.StoreTier">
+		SELECT * FROM Store_tier WHERE store_tier_no=#{storeTierNo}
+	</select>
+	
+	<select id="selectReview" resultType="com.whm.atelier.vo.Review">
+		SELECT * FROM Review WHERE product_no=#{productNo}
+	</select>
+	<select id="selectReviewByStoreNo" resultType="com.whm.atelier.vo.Review">
+		SELECT * FROM Review WHERE store_no=#{storeNo}
+	</select>
+	
+	<select id="selectAsk" resultType="com.whm.atelier.vo.ProductAsk">
+		SELECT * FROM Product_ask WHERE product_no=#{productNo}
+	</select>
+	<select id="selectAskByStoreNo" resultType="com.whm.atelier.vo.ProductAsk">
+		SELECT * FROM Product_ask WHERE store_no=#{storeNo}
+	</select>
+	
+	<insert id="insertCustomerQna">
+		INSERT INTO Customer_center VALUES(
+		customer_center_seq.nextval,
+		#{customer_no},
+		null,
+		#{cus_center_title},
+		#{cus_center_content},
+		null,
+		SYSDATE,
+		null,
+		'n'
+		)
+	</insert>	
+	
+	<select id="selectCusAskList" resultType="com.whm.atelier.vo.CustomerCenter">
+		SELECT * FROM Customer_center 
+		WHERE customer_no = #{customerNo}
+		ORDER BY cus_center_no DESC
+	</select>	
+	
+	<select id="selectCusAskDetail" resultType="com.whm.atelier.vo.CustomerCenter"> 
+		SELECT * FROM Customer_center
+		WHERE cus_center_no = #{cusCenterNo}
+	</select>
+	
+	<delete id="deleteCusAsk">
+		DELETE FROM Customer_center
+		WHERE cus_center_no = #{cusCenterNo}	
+	</delete>
+	
+	<select id="selectMyProduct" resultType="com.whm.atelier.vo.Product">
+		SELECT * FROM Product WHERE store_no = #{storeNo} AND product_confirm_status_no = #{type} AND product_status_yn = #{type}
+		ORDER BY product_NO DESC
+	</select>
+	
+	
+	<!--내 지갑T   -->
+	<select id="selectMyWallet" resultType="com.whm.atelier.vo.CustomerWallet">
+		SELECT * FROM Customer_wallet 
+		WHERE customer_no = #{customerNo}
+		
+	</select>
+	
+	<!-- 중앙 뱅크T   -->
+	<select id="selectBank" resultType="com.whm.atelier.vo.CenterBank">
+		SELECT * FROM Center_bank
+		WHERE customer_wallet_no = #{customerWalletNo}
+		
+	</select>
+	
+	<!-- 내 지갑 추가 -->
+	<insert id="insertCustomerWallet">
+		INSERT INTO Customer_wallet values(
+			customer_wallet_seq.nextval,
+			#{customerNo},
+			#{account},
+			#{bank},
+			0,
+			SYSDATE
+		)
+	
+	</insert>		
+	
+	
+		<!-- 뱅크 추가 -->
+	<insert id="insertBank">
+		INSERT INTO Center_bank values(
+			Center_bank_seq.nextval,
+			#{walletNo},
+			0,
+			SYSDATE
+		)
+	</insert>	
+	
+	
+	<update id="updateCustomerWallet">
+		UPDATE Customer_wallet SET customer_wallet_account = #{account},customer_wallet_bank_name = #{bank}
+		 WHERE customer_no =#{customerNo}
+	</update>
+	
+	
+	
+   
+	
+</mapper>

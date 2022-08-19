@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.whm.atelier.mapper.admin.AdminMainMapper">
+
+	<!-- 아이디로 계정 유무 체크 -->
+	<select id="selectByIdAndPw" resultType="com.whm.atelier.vo.Admin">
+		SELECT * FROM ADMIN WHERE admin_id = #{admin_id} and admin_pw = #{admin_pw}
+	</select>
+	
+	<select id="totalGetPrice" resultType="map">
+		SELECT * FROM ORDER_TB ot , PRODUCT pr , CONSUMER c WHERE  ot.PRODUCT_NO = pr.PRODUCT_NO
+		AND c.CONSUMER_NO  = ot.CONSUMER_NO 
+		ORDER BY ot.ORDER_NO desc
+	</select>
+
+	
+</mapper>

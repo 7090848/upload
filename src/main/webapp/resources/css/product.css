@@ -1,0 +1,31 @@
+@charset "UTF-8";
+
+.nav-btn {
+	font-size: small;
+	text-align: center;
+}
+
+.text-small {
+	font-size: small;
+}
+
+.text-xsmall {
+	font-size: x-small;
+}
+
+.img-wrapper {
+	width: 85px;
+	height: 85px;
+}
+
+.img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    margin: auto;
+}
+
+.pd-img {
+	width: 100%;
+	object-fit: cover;
+}

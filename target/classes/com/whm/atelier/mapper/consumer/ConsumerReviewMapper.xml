@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.whm.atelier.mapper.consumer.ConsumerReviewMapper">
+	
+	
+	<select id="selectByNoProduct" resultType="com.whm.atelier.vo.Product">
+		SELECT * FROM PRODUCT p WHERE product_no = #{product_no}
+	</select>
+	
+	
+	<select id ="myReview" resultType="map">
+		SELECT * FROM REVIEW r, STORE s , PRODUCT p , CONSUMER c, PRODUCT_IMAGE pi2 
+			WHERE r.STORE_NO =s.STORE_NO 
+			AND r.PRODUCT_NO = p.PRODUCT_NO 
+			AND r.CONSUMER_NO = c.CONSUMER_NO 
+			AND pi2.PRODUCT_NO = p.PRODUCT_NO 
+			AND pi2.PI_REPRESENTIVE_YN = 'y'
+			<if test="consumer_no != null">
+			AND c.CONSUMER_NO = #{consumer_no}
+			</if>
+	</select>
+	
+	
+	<select id ="starReview" resultType="int">
+		SELECT review_star FROM review WHERE review_no = #{review_no} and consumer_no=#{consumer_no}
+	</select>
+	
+	<select id="myReviewData" resultType="com.whm.atelier.vo.Review">
+		SELECT * FROM REVIEW where consumer_no = #{consumer_no} AND review_no = #{review_no} 
+	</select>
+	
+	<insert id="insertReview">
+		INSERT INTO review values(
+			review_seq.nextval,
+			#{consumer_no},
+			#{product_no},
+			#{store_no},
+			#{order_no},
+			#{review_content},
+			#{review_star},
+			SYSDATE,
+			#{review_img_path}
+		)
+	</insert>
+	
+	<update id="updateReview">
+		UPDATE review 
+		SET review_content = #{review_content} , review_star = #{review_star}, REVIEW_WRITEDATE = SYSDATE, review_img_path=#{review_img_path}
+		WHERE consumer_no = #{consumer_no} AND REVIEW_NO= #{review_no}
+	</update>
+	
+	<delete id="deleteReview">
+		DELETE FROM review WHERE review_no = #{review_no} AND consumer_no = #{consumer_no}
+	</delete>
+	
+	<select id="myWishList" resultType="map">
+	
+		SELECT * 
+		FROM CONSUMER_WISH cw, PRODUCT p 	
+		WHERE cw.PRODUCT_NO = p.PRODUCT_NO 
+		<if test="consumer_no != null">
+		AND cw.consumer_no = #{consumer_no} 
+		</if>
+		ORDER BY cw.consumer_wish_no
+	</select>
+	
+	<select id="reviewIns" resultType="com.whm.atelier.vo.Review">
+		SELECT * FROM REVIEW 
+		WHERE ORDER_NO =#{order_no}
+		AND PRODUCT_NO = #{product_no} 
+		AND STORE_NO =#{store_no}
+		AND CONSUMER_NO = #{consumer_no}
+	</select>
+	
+
+
+
+
+</mapper>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.whm.atelier.mapper.consumer.ConsumerMainMapper">
+	
+	<sql id="selectConsumerInfo">
+		consumer_no, consumer_tier_no, consumer_id,	consumer_pw, consumer_name, consumer_nickname,
+		consumer_phone, consumer_email,	consumer_birth, consumer_joindate, consumer_totalpoint,
+		consumer_rec_code, consumer_input_rec_code, consumer_delete_yn
+	</sql>
+
+	<!-- Consumer PK 만들기 (여러 곳에서 사용 시 하나의 nextval 통일) -->
+	<select id="createConsumerPk" resultType="int">
+		SELECT Consumer_seq.nextval FROM Dual
+	</select>
+	
+	<!-- 아이디로 계정 유무 체크 -->
+	<select id="selectByIdAndPw" resultType="com.whm.atelier.vo.Consumer">
+		SELECT 
+			<include refid="selectConsumerInfo"></include>
+		FROM CONSUMER WHERE consumer_id = #{consumer_id}
+		<if test="consumer_pw != null">
+		 	AND consumer_pw = #{consumer_pw}
+		</if>
+	</select>
+
+	<!-- 회원가입 -->
+	<insert id="register">
+		INSERT INTO CONSUMER VALUES (
+			#{consumer_no},
+			1,
+			#{consumer_id},
+			#{consumer_pw},
+			#{consumer_name},
+			#{consumer_nickname},
+			#{consumer_phone},
+			#{consumer_email},
+			#{consumer_birth},
+			SYSDATE,
+			#{consumer_totalpoint},
+			#{consumer_rec_code},
+			#{consumer_input_rec_code},
+			'N'
+		)
+	</insert>
+	
+	<!-- 회원정보 변경 -->	
+	<update id="updateConsumerInfo">
+		UPDATE CONSUMER SET
+			consumer_pw = #{consumer_pw},
+			consumer_name = #{consumer_name},
+			consumer_nickname = #{consumer_nickname},
+			consumer_phone = #{consumer_phone},
+			consumer_email = #{consumer_email}
+		WHERE consumer_no = #{consumer_no}
+	</update>
+	
+	<!-- 회원 포인트 변경 -->
+	<update id="updateConsumerPoint">
+		UPDATE CONSUMER SET 
+			consumer_totalpoint = consumer_totalpoint + #{point} 
+		WHERE CONSUMER_NO = #{consumer_no}
+	</update>
+	
+	<!-- 포인트 사용/적립 시 로그 insert -->
+	<insert id="insertConsumerPointLog">
+		INSERT INTO CONSUMER_POINT_LOG VALUES (
+			consumer_point_log_seq.nextval,
+			#{consumer_no},
+			#{point_price},
+			SYSDATE
+		)
+	</insert>	
+	
+	<!-- 포인트 사용/적립 로그 조회 -->
+	<select id="selectConsumerPointLog" resultType="com.whm.atelier.vo.ConsumerPointLog">
+		SELECT * FROM Consumer_point_log WHERE consumer_no = #{consumer_no}
+	</select>
+	
+	<!-- 회원 탈퇴 -->
+	<update id="deleteConsumer">
+		UPDATE CONSUMER SET CONSUMER_DELETE_YN = 'Y' WHERE CONSUMER_NO = #{consumer_no}
+	</update>
+	
+	<!-- 추천인입력 시 회원 존재여부 확인 -->
+	<select id="selectByRecCode" resultType="com.whm.atelier.vo.Consumer">
+		SELECT * FROM CONSUMER WHERE consumer_rec_code = #{recommend_code}
+	</select>
+	
+	<!-- 전체 정보 출력 -->
+	<select id="selectByConsumerNo" resultType="com.whm.atelier.vo.Consumer">
+		SELECT 
+			<include refid="selectConsumerInfo"></include>
+		FROM CONSUMER WHERE consumer_no = #{consumer_no}
+	</select>
+	
+	<!-- 회원 등급 변경 -->
+	<update id="updateConsumerTier">
+		UPDATE CONSUMER SET consumer_tier_no = #{consumer_tier_no} WHERE consumer_no = #{consumer_no}
+	</update>
+	
+	<!-- 등급별 정보 조회 -->
+	<select id="selectConsumerTier" resultType="com.whm.atelier.vo.ConsumerTier">
+		SELECT * FROM Consumer_tier where consumer_tier_no = #{consumer_tier_no}
+	</select>
+	
+	<!-- 회원 배송지 정보 조회 -->
+	<select id="selectConsumerAddress" resultType="com.whm.atelier.vo.ConsumerAddress">
+		SELECT * FROM CONSUMER_ADDRESS where consumer_no = #{consumer_no}
+	</select>
+	
+	<select id="selectByNoCon" resultType="com.whm.atelier.vo.Consumer"> 
+		SELECT * FROM consumer WHERE CONSUMER_NO = #{consumer_no} 
+	</select>
+	
+	<select id="selectAllCon" resultType="com.whm.atelier.vo.Consumer"> 
+		select * from consumer order by consumer_no DESC 
+	</select>
+	
+	<!-- 생김 -->
+	<select id="myTierInfo" resultType="Map">
+		SELECT ct.CONSUMER_TIER_NO ,ct.CONSUMER_TIER_NAME, c.consumer_no
+		FROM CONSUMER_TIER ct ,CONSUMER c 
+		WHERE ct.CONSUMER_TIER_NO = c.CONSUMER_TIER_NO 
+		AND c.CONSUMER_NO = #{consumer_no}
+	</select>
+	
+</mapper>

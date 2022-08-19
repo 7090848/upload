@@ -1,0 +1,35 @@
+@charset "UTF-8";
+@import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap');
+
+/* 공통 적용 (폰트,배경색상) */
+body {
+	font-family: 'Do Hyeon', sans-serif !important;
+	color: #434b52;
+	background-color: #FAFAFA;
+}
+
+/** 메인 색상 **/
+/* 진노랑 */
+.main-yellow {
+	color: #FFCA28;
+}
+/* 회색 */
+.sub-grey {
+	color: #6C6C6C;
+}
+
+
+/* 폰트 사이즈별 */
+.text-small {
+	font-size: small;
+}
+
+.text-xsmall {
+	font-size: x-small;
+}
+
+.text-bold {
+	font-weight: bold;
+}
+
+
